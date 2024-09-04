@@ -1,33 +1,64 @@
-from fastapi import APIRouter, HTTPException, status, Response
+from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import RedirectResponse
-from ..db import db
-from ..schemas.url import Url, UrlCreate, UrlRead
-from ..helpers.random_key import generate_random_key
+
+from sqlalchemy import select, Sequence
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..db import get_async_session
+from ..schemas.url import UrlCreate, UrlRead, UrlUpdate
+from ..models.url import Url
 
 router = APIRouter(
     prefix="/shorten",
     tags=["urls"],
 )
 
-# @router.get("/")
-async def read_urls():
-    return db
+
+async def pagination(skip: int = 0, limit: int = 10) -> tuple[int, int]:
+    return (skip, limit)
+
+
+async def get_url_or_404(
+    short_code: str, session: AsyncSession = Depends(get_async_session)
+) -> Url:
+    select_query = select(Url).where(Url.short_code == short_code)
+    result = await session.execute(select_query)
+    # NOTE: scalar_one_or_none -> return a single object if it exists, or None otherwis
+    url = result.scalar_one_or_none()
+
+    if url is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return url
+
+
+@router.get("/", response_model=list[UrlRead])
+async def get_urls(
+    pagination: tuple[int, int] = Depends(pagination),
+    session: AsyncSession = Depends(get_async_session),
+) -> Sequence[Url]:
+    skip, limit = pagination
+    select_query = select(Url).offset(skip).limit(limit)
+
+    result = await session.execute(select_query)
+
+    return result.scalars().all()
+
 
 # Retrieve Original URL
-@router.get("/{shortened_url}")
-async def read_url(shortened_url: str) -> Url:
-    for url in db.urls.values():
-        if url.short_code == shortened_url:
-            return url
-    raise HTTPException(status_code=404, detail="URL not found")
-
-
+@router.get("/{short_code}", response_model=UrlRead)
+async def get_url(short_code: str, url: Url = Depends(get_url_or_404)) -> Url:
+    return url
 
 
 # Create Short URL
-@router.post("/", status_code=201)
-async def create_url(request: UrlCreate) -> None:
-    id = max(db.urls.keys() or (0,)) + 1 # tuple (0,) ensures at least one value is passed to max
-    url = Url(id=id, original=request.original, short_code=generate_random_key())
-    db.urls[id] = url
+@router.post("/", response_model=UrlRead, status_code=status.HTTP_201_CREATED)
+async def create_url(
+    new_url: UrlCreate, session: AsyncSession = Depends(get_async_session)
+) -> Url:
+    url = Url(**new_url.model_dump())
+    session.add(url)
+    print(url)
+    await session.commit()
+
     return url

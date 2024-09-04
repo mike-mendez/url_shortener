@@ -1,25 +1,27 @@
-from pydantic import BaseModel, Field, AnyHttpUrl, field_validator
+from pydantic import BaseModel, Field
 from datetime import datetime
 
+from ..helpers.generate_code import generate_code
+
+
 class UrlBase(BaseModel):
-    original: str
-    
-    # @field_validator('url')
-    # @classmethod
-    # def validate_url(cls, v: str) -> str:
-        
-    
+    url: str
+
+    class config:
+        orm_mode: True
+
+
 class UrlCreate(UrlBase):
-    pass
-    
-class UrlUpdate(UrlBase):
-    id: int
-    
+    short_code: str = Field(default_factory=generate_code)
+
+
+class UrlUpdate(BaseModel):
+    url: str | None = None
+
+
 class UrlRead(UrlBase):
-    short_code: str
-    
-class Url(UrlBase):
     id: int
+    uuid: str
     short_code: str
     visit_count: int = 0
     created_at: datetime = Field(default_factory=datetime.now)
