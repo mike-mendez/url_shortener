@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import DateTime, Integer, String, UUID, func
+from sqlalchemy import DateTime, Integer, String, UUID, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from uuid import uuid4
 
@@ -31,3 +31,4 @@ class Url(Base):
         default=datetime.now,
         onupdate=datetime.now,
     )
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=1)

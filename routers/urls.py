@@ -46,7 +46,7 @@ async def get_urls(
 
 
 # Retrieve Original URL
-@router.get("/{short_code}", response_model=UrlRead)
+@router.get("/{short_code}", response_model=UrlRead, status_code=status.HTTP_200_OK)
 async def get_url(short_code: str, url: Url = Depends(get_url_or_404)) -> Url:
     return url
 
@@ -59,6 +59,23 @@ async def create_url(
     url = Url(**new_url.model_dump())
     session.add(url)
     print(url)
+    await session.commit()
+
+    return url
+
+
+@router.put("/{short_code}", response_model=UrlRead, status_code=status.HTTP_200_OK)
+async def update_url(
+    short_code: str,
+    updated_url: UrlUpdate,
+    url: Url = Depends(get_url_or_404),
+    session: AsyncSession = Depends(get_async_session),
+) -> Url:
+    url_update_dict = updated_url.model_dump(exclude_unset=True)
+    for key, value in url_update_dict.items():
+        setattr(url, key, value)
+
+    session.add(url)
     await session.commit()
 
     return url
