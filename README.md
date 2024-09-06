@@ -1,6 +1,6 @@
 # URL Shortening Service
 
-A URL Shortener API that helps shorten long URLs. Using Python & FastAPI.
+A FastAPI URL Shortener API that helps shorten long URLs. You can find the project information here: <https://roadmap.sh/projects/url-shortening-service>
 
 ## Requirements
 
