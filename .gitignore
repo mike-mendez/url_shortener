@@ -1,2 +1,6 @@
+.DS_Store
 /venv
 __pycache__/
+url_shortener.db
+/alembic
+alembic.ini

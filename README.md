@@ -1,143 +1,108 @@
 # URL Shortening Service
 
-Build a URL Shortener API that helps shorten long URLs.
-
-You are required to create a simple RESTful API that allows users to shorten long URLs. The API should provide endpoints to create, retrieve, update, and delete short URLs. It should also provide statistics on the number of times a short URL has been accessed.
-
-![setup](https://assets.roadmap.sh/guest/url-shortener-architecture-u72mu.png)
+A URL Shortener API that helps shorten long URLs. Using Python & FastAPI.
 
 ## Requirements
 
-You should create a RESTful API for a URL shortening service. The API should allow users to perform the following operations:
+### Install Python & SQLite
 
-- Create a new short URL
-- Retrieve an original URL from a short URL
-- Update an existing short URL
-- Delete an existing short URL
-- Get statistics on the short URL (e.g., number of times accessed)
-- You can optionally setup a minimal frontend to interact with the API and setup redirects for the short URLs to the original URLs.
+#### macOS (using Homebreww)
 
-## API Endpoints
-
-Given below are the details for each API operation.
-
-### Create Short URL
-
-Create a new short URL using the ```POST``` method
+Use the following command: ```brew install python sqlite```.
+Verify with:
 
 ```bash
-POST /shorten
-{
-  "url": "https://www.example.com/some/long/url"
-}
+python3 --version
+sqlite3 --version
 ```
 
-The endpoint should validate the request body and return a ```201 Created``` status code with the newly created short URL i.e.
+#### Windows (using winget)
+
+Use the following command: ```winget install Python.Python.3```. Verify with ```python --version```
+
+#### Linux
+
+##### Ubuntu/Debian
+
+Use the following command: ```sudo apt update && sudo apt install python3 sqlite3```.
+
+##### Fedora
+
+Use the following command: ```sudo dnf check-update && sudo dnf install python3 sqlite```.
+
+##### Arch Linux
+
+Use the following command: ```sudo pacman -Syu python sqlite```.
+
+Verify all with:
 
 ```bash
-{
-  "id": "1",
-  "url": "https://www.example.com/some/long/url",
-  "shortCode": "abc123",
-  "createdAt": "2021-09-01T12:00:00Z",
-  "updatedAt": "2021-09-01T12:00:00Z"
-}
+python --version
+sqlite3 --version
 ```
 
-or a ```400 Bad Request``` status code with error messages in case of validation errors. Short codes must be unique and should be generated randomly.
+## Clone Repository & Setup venv
 
-## Retrieve Original URL
-
-Retrieve the original URL from a short URL using the ```GET``` method
+Clone the repository with:
 
 ```bash
-GET /shorten/abc123
+git@github.com:mike-mendez/url_shortener.git
 ```
 
-The endpoint should return a ```200 OK``` status code with the original URL i.e.
+OR
 
 ```bash
-{
-  "id": "1",
-  "url": "https://www.example.com/some/long/url",
-  "shortCode": "abc123",
-  "createdAt": "2021-09-01T12:00:00Z",
-  "updatedAt": "2021-09-01T12:00:00Z"
-}
+https://github.com/mike-mendez/url_shortener.git
 ```
 
-or a ```404 Not Found``` status code if the short URL was not found. Your frontend should be responsible for retrieving the original URL using the short URL and redirecting the user to the original URL.
+```cd``` into the url_shortener directory then create and activate a virtual environment:
 
-## Update Short URL
-
-Update an existing short URL using the ```PUT``` method
+### macOS & Linux
 
 ```bash
-PUT /shorten/abc123
-{
-  "url": "https://www.example.com/some/updated/url"
-}
+cd url_shortener
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-The endpoint should validate the request body and return a ```200 OK``` status code with the updated short URL i.e.
+### Windows
 
 ```bash
-{
-  "id": "1",
-  "url": "https://www.example.com/some/updated/url",
-  "shortCode": "abc123",
-  "createdAt": "2021-09-01T12:00:00Z",
-  "updatedAt": "2021-09-01T12:30:00Z"
-}
+cd url_shortener
+python -m venv venv
+venv/Scripts/activate
 ```
 
-### Delete Short URL
+## Install Necessary Packages
 
-Delete an existing short URL using the ```DELETE``` method
+Install all packages with the following:
+
+### macOS & Linux
 
 ```bash
-DELETE /shorten/abc123
+python3 -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-The endpoint should return a ```204 No Content``` status code if the short URL was successfully deleted or a ```404 Not Found``` status code if the short URL was not found.
-
-### Get URL Statistics
-
-Get statistics for a short URL using the ```GET``` method
+### Windows
 
 ```bash
-GET /shorten/abc123/stats
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-The endpoint should return a ```200 OK``` status code with the statistics i.e.
+## Alembic Migration
+
+Use the following commands to setup an initial alembic migration:
 
 ```bash
-{
-  "id": "1",
-  "url": "https://www.example.com/some/long/url",
-  "shortCode": "abc123",
-  "createdAt": "2021-09-01T12:00:00Z",
-  "updatedAt": "2021-09-01T12:00:00Z",
-  "accessCount": 10
-}
+alembic revision --autogenerate -m "Initial migration"
+alembic upgrade head
 ```
 
-or a ```404 Not Found``` status code if the short URL was not found.
+## Start Server
 
----
+Run server with: ```fastapi dev app.py```
 
-## Tech Stack
-
-Feel free to use any programming language, framework, and database of your choice for this project. Here are some suggestions:
-
-- If you are using JavaScript, you can use Node.js with Express.js
-- If you are using Python, you can use Flask or Django
-- If you are using Java, you can use Spring Boot
-- If you are using Ruby, you can use Ruby on Rails
-
-For databases, you can use:
-
-- MySQL if you are using SQL
-- MongoDB if you are using NoSQL
-
-Your job is to implement the core functionality of the API, focusing on creating, retrieving, updating, and deleting short URLs, as well as tracking and retrieving access statistics. You don’t have to implement authentication or authorization for this project.
+Root: <http://127.0.0.1:8000>
+Documentation: <http://127.0.0.1:8000/docs> or <http://127.0.0.1:8000/redoc>

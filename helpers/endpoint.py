@@ -15,7 +15,7 @@ async def get_url_or_404(
 ) -> Url:
     select_query = select(Url).where((Url.short_code == short_code) & Url.active != 0)
     result = await session.execute(select_query)
-    # NOTE: scalar_one_or_none -> return a single object if it exists, or None otherwise
+    # NOTE: scalar_one_or_none -> returns a single object if it exists, or None otherwise
     url = result.scalar_one_or_none()
 
     if url is None:

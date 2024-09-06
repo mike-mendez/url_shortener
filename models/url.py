@@ -6,12 +6,8 @@ import secrets
 
 from sqlalchemy import DateTime, Integer, String, UUID, Boolean, event, select
 from sqlalchemy.orm import Mapped, mapped_column, Session
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base import Base
-
-# from ..helpers.generate_code_uuid import generate_uuid
-
 
 class Url(Base):
     __tablename__ = "urls"
