@@ -1,18 +1,16 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-
-from ..helpers.generate_code import generate_code
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class UrlBase(BaseModel):
-    url: str
+    url: HttpUrl
 
     class config:
         orm_mode: True
 
 
 class UrlCreate(UrlBase):
-    short_code: str = Field(default_factory=generate_code)
+    short_code: str = None
 
 
 class UrlUpdate(BaseModel):
@@ -23,6 +21,10 @@ class UrlRead(UrlBase):
     id: int
     uuid: str
     short_code: str
-    visit_count: int = 0
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
+
+class UrlStats(UrlRead):
+    visit_count: int
+    active: bool

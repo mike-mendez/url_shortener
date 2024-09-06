@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.responses import RedirectResponse
+from fastapi import APIRouter, status, Depends
 
 from sqlalchemy import select, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_async_session
-from ..schemas.url import UrlCreate, UrlRead, UrlUpdate
+from ..schemas.url import UrlCreate, UrlRead, UrlUpdate, UrlStats
 from ..models.url import Url
+
+from ..helpers.endpoint import pagination, get_url_or_404
 
 router = APIRouter(
     prefix="/shorten",
@@ -14,24 +15,25 @@ router = APIRouter(
 )
 
 
-async def pagination(skip: int = 0, limit: int = 10) -> tuple[int, int]:
-    return (skip, limit)
-
-
-async def get_url_or_404(
-    short_code: str, session: AsyncSession = Depends(get_async_session)
+# Create Short URL
+@router.post("/", response_model=UrlRead, status_code=status.HTTP_201_CREATED)
+async def create_url(
+    new_url: UrlCreate, session: AsyncSession = Depends(get_async_session)
 ) -> Url:
-    select_query = select(Url).where(Url.short_code == short_code)
-    result = await session.execute(select_query)
-    # NOTE: scalar_one_or_none -> return a single object if it exists, or None otherwis
-    url = result.scalar_one_or_none()
-
-    if url is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    url = Url(url=str(new_url.url))
+    session.add(url)
+    await session.commit()
 
     return url
 
 
+# Retrieve Original URL
+@router.get("/{short_code}", response_model=UrlRead, status_code=status.HTTP_200_OK)
+async def get_url(short_code: str, url: Url = Depends(get_url_or_404)) -> Url:
+    return url
+
+
+# Get All URLs
 @router.get("/", response_model=list[UrlRead])
 async def get_urls(
     pagination: tuple[int, int] = Depends(pagination),
@@ -45,25 +47,7 @@ async def get_urls(
     return result.scalars().all()
 
 
-# Retrieve Original URL
-@router.get("/{short_code}", response_model=UrlRead, status_code=status.HTTP_200_OK)
-async def get_url(short_code: str, url: Url = Depends(get_url_or_404)) -> Url:
-    return url
-
-
-# Create Short URL
-@router.post("/", response_model=UrlRead, status_code=status.HTTP_201_CREATED)
-async def create_url(
-    new_url: UrlCreate, session: AsyncSession = Depends(get_async_session)
-) -> Url:
-    url = Url(**new_url.model_dump())
-    session.add(url)
-    print(url)
-    await session.commit()
-
-    return url
-
-
+# Update Original URL
 @router.put("/{short_code}", response_model=UrlRead, status_code=status.HTTP_200_OK)
 async def update_url(
     short_code: str,
@@ -78,4 +62,41 @@ async def update_url(
     session.add(url)
     await session.commit()
 
+    return url
+
+
+# Delete URL record
+@router.delete("/{short_code}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_url(
+    short_code: str,
+    url: Url = Depends(get_url_or_404),
+    session: AsyncSession = Depends(get_async_session),
+):
+    await session.delete(url)
+    await session.commit()
+
+
+# Deactivate URL record
+@router.patch("/{short_code}", status_code=status.HTTP_204_NO_CONTENT)
+async def deactivate_url(
+    short_code: str,
+    url: Url = Depends(get_url_or_404),
+    session: AsyncSession = Depends(get_async_session),
+) -> None:
+    url.active = 0
+
+    session.add(url)
+    await session.commit()
+
+    return None
+
+
+# Get URL stats
+@router.get(
+    "/{short_code}/stats", response_model=UrlStats, status_code=status.HTTP_200_OK
+)
+async def get_url_stats(
+    short_code: str,
+    url: Url = Depends(get_url_or_404),
+) -> Url:
     return url
