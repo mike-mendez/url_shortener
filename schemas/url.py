@@ -25,6 +25,11 @@ class UrlRead(UrlBase):
     updated_at: datetime = Field(default_factory=datetime.now)
 
 
-class UrlStats(UrlRead):
+class UrlStats(UrlBase):
+    id: int
+    uuid: str
+    short_code: str
     visit_count: int
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
     active: bool
