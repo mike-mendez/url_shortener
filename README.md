@@ -93,12 +93,22 @@ pip install -r requirements.txt
 
 ## Alembic Migration
 
-Use the following commands to setup an initial alembic migration:
+Initialize alembic with ```alembic init alembic```.
+Update line 63 ```sqlalchemy.url = driver://user:pass@localhost/dbname``` in alembic.ini to use the sqlite driver:
+
+``sqlite:///url_shortener.db``
+
+In the env file in the newly created alembic directory, add the following code with the rest of the imports```from models.base import Base```.
+Update line 23 to use the correct metadate: ```target_metadata = Base.metadata```
+
+Then generate a new migration script and upgrade the head with the following:
 
 ```bash
 alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
 ```
+
+You should a new url_shortener.db file in the root directory.
 
 ## Start Server
 
