@@ -1,5 +1,11 @@
 .DS_Store
 /venv
+# Virtualenv created in the project root
+/bin/
+/include/
+/lib/
+/lib64/
+/pyvenv.cfg
 __pycache__/
 url_shortener.db
 /alembic
